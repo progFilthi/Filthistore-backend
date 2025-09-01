@@ -6,11 +6,9 @@ import { auth } from "./lib/auth";
 const app = express();
 
 //middleware for cors
-const frontendPort = process.env.PUBLIC_NEXT_BASE_URL!;
-// "http://localhost:3000"
 app.use(
   cors({
-    origin: frontendPort,
+    origin: "http://localhost:3000",
     methods: ["GET", "POST"],
     credentials: true,
   })
