@@ -1,7 +1,5 @@
-
 generator client {
   provider = "prisma-client-js"
-  // output   = "../src/generated/prisma"
 }
 
 datasource db {
@@ -15,8 +13,22 @@ model Beat {
   key       String
   bpm       Int
   price     Int
+  audioUrl  String? // s3 url for the audio
+  imageUrl  String? // s3 url for the image
+  license   License[] // multiple licenses for the beats
+  producer  User @relation(fields: [producerId], references: [id])
+  producerId String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model License {
+  id     String @id @default(cuid())
+  price  Int // in cents
+  type   String // "Basic" | "Unlimited" | "Exclusive"
+  beat   Beat @relation(fields: [beatId], references: [id])
+  beatId String
+  @@unique([beatId, type])
 }
 
 model User {
@@ -29,7 +41,7 @@ model User {
   updatedAt     DateTime
   sessions      Session[]
   accounts      Account[]
-
+  beats         Beat[]
   @@unique([email])
   @@map("user")
 }
