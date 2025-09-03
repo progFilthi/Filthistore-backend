@@ -7,62 +7,134 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+//
+// 🔹 Enums for consistency
+//
+enum Currency {
+  RWF
+  USD
+}
+
+enum PurchaseStatus {
+  pending
+  paid
+  failed
+  refunded
+}
+
+enum Provider {
+  dodo
+  stripe
+  paypal
+}
+
+enum FileType {
+  mp3
+  wav
+  stems
+  image
+}
+
+enum LicenseType {
+  Basic
+  Unlimited
+  Exclusive
+}
+
+//
+// 🔹 Core Models
+//
 model Beat {
-  id        String   @id @default(cuid())
-  title     String
-  key       String
-  bpm       Int
-  price     Int
-  audioUrl  String? // s3 url for the audio
-  imageUrl  String? // s3 url for the image
-  license   License[] // multiple licenses for the beats
-  producer  User @relation(fields: [producerId], references: [id])
+  id         String     @id @default(cuid())
+  title      String
+  key        String
+  bpm        Int
+  price      Int                  // default or base price
+  licenses   License[]
+  files      File[]               // mp3, wav, stems (optional), cover image
+  producer   User      @relation(fields: [producerId], references: [id])
   producerId String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  purchases  Purchase[]
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+}
+
+model File {
+  id        String    @id @default(cuid())
+  beatId    String
+  beat      Beat      @relation(fields: [beatId], references: [id])
+  type      FileType
+  url       String    // S3 url
+  createdAt DateTime  @default(now())
+
+  @@unique([beatId, type]) // one file type per beat
 }
 
 model License {
-  id     String @id @default(cuid())
-  price  Int // in cents
-  type   String // "Basic" | "Unlimited" | "Exclusive"
-  beat   Beat @relation(fields: [beatId], references: [id])
-  beatId String
-  @@unique([beatId, type])
+  id       String     @id @default(cuid())
+  beatId   String
+  beat     Beat       @relation(fields: [beatId], references: [id])
+  type     LicenseType
+  price    Int        // in cents
+  purchases Purchase[]
+
+  @@unique([beatId, type]) // each license type once per beat
 }
 
+model Purchase {
+  id          String         @id @default(cuid())
+  userId      String?
+  user        User?          @relation(fields: [userId], references: [id])
+  beatId      String
+  beat        Beat           @relation(fields: [beatId], references: [id])
+  licenseId   String
+  license     License        @relation(fields: [licenseId], references: [id])
+
+  amount      Int
+  currency    Currency
+  status      PurchaseStatus @default(pending)
+  provider    Provider
+  providerTxn String         @unique
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+//
+// 🔹 Auth Models (Better-Auth)
+//
 model User {
-  id            String    @id
-  name          String
-  email         String
-  emailVerified Boolean
+  id            String     @id @default(cuid())
+  name          String?
+  email         String     @unique
+  emailVerified Boolean    @default(false)
   image         String?
-  createdAt     DateTime
-  updatedAt     DateTime
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
   sessions      Session[]
   accounts      Account[]
   beats         Beat[]
-  @@unique([email])
+  purchases     Purchase[]
+
   @@map("user")
 }
 
 model Session {
-  id        String   @id
+  id        String   @id @default(cuid())
   expiresAt DateTime
-  token     String
-  createdAt DateTime
-  updatedAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
   ipAddress String?
   userAgent String?
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([token])
   @@map("session")
 }
 
 model Account {
-  id                    String    @id
+  id                    String    @id @default(cuid())
   accountId             String
   providerId            String
   userId                String
@@ -74,19 +146,19 @@ model Account {
   refreshTokenExpiresAt DateTime?
   scope                 String?
   password              String?
-  createdAt             DateTime
-  updatedAt             DateTime
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
 
   @@map("account")
 }
 
 model Verification {
-  id         String    @id
+  id         String    @id @default(cuid())
   identifier String
   value      String
   expiresAt  DateTime
-  createdAt  DateTime?
-  updatedAt  DateTime?
+  createdAt  DateTime? @default(now())
+  updatedAt  DateTime? @updatedAt
 
   @@map("verification")
 }
