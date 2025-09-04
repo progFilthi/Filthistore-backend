@@ -20,35 +20,23 @@ app.all("/api/auth/*splat", toNodeHandler(auth));
 //middleware for parsing into JSON
 app.use(express.json());
 
-import { checkoutHandler } from "@dodopayments/express";
-
-//creating a static product
-app.get(
-  "/api/v1/checkout",
-  checkoutHandler({
-    bearerToken: process.env.DODO_PAYMENTS_API_KEY,
-    returnUrl: process.env.DODO_PAYMENTS_RETURN_URL,
-    environment: "test_mode",
-    type: "static",
-  })
-);
-
-//this is for dynamic products that u create with code
-app.post(
-  "/api/v1/checkout",
-  checkoutHandler({
-    bearerToken: process.env.DODO_PAYMENTS_API_KEY,
-    returnUrl: process.env.DODO_PAYMENTS_RETURN_URL,
-    environment: "test_mode",
-    type: "dynamic",
-  })
-);
-
 //this is for routes
 import { beatRoutes } from "../src/routes/beat.route";
+import { checkOutRoutes } from "./routes/checkout.route";
+import { webHookRoutes } from "./routes/webhook.route";
+import { downloadRoutes } from "./routes/download.route";
 
-//allows us to use one api and just separate the routes accordingly
+//For beats api endpoints
 app.use("/api/v1/beats/", beatRoutes);
+
+//For check out api endpoints
+app.use("/api/v1/checkouts/", checkOutRoutes);
+
+//For webhook api end points
+app.use("/api/v1/webhooks/", webHookRoutes);
+
+//For beat download api endpoints
+app.use("/api/v1/downloads/", downloadRoutes);
 
 //health check
 app.get("/", (_, res) => {
