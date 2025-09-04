@@ -15,3 +15,5 @@ beatRoutes.get("/:id", BeatController.getBeatById);
 // POST /api/beats
 // Create a beat (auth required: producer uploads)
 beatRoutes.post("/", authMiddleware, BeatController.createBeat);
+
+
