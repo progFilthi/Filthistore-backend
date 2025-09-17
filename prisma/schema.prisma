@@ -7,102 +7,17 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-//
-// 🔹 Enums for consistency
-//
-enum Currency {
-  RWF
-  USD
+model Kit{
+  id String @id @default(cuid())
+  title String
+  description String?
+  price Int //in cents
+  audioUrl String //to be in s3
+  imageUrl String //to be in s3
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
-enum PurchaseStatus {
-  pending
-  paid
-  failed
-  refunded
-}
-
-enum Provider {
-  dodo
-  stripe
-  paypal
-}
-
-enum FileType {
-  mp3
-  wav
-  stems
-  image
-}
-
-enum LicenseType {
-  Basic
-  Unlimited
-  Exclusive
-}
-
-//
-// 🔹 Core Models
-//
-model Beat {
-  id         String     @id @default(cuid())
-  title      String
-  key        String
-  bpm        Int
-  price      Int                  // default or base price
-  licenses   License[]
-  files      File[]               // mp3, wav, stems (optional), cover image
-  producer   User      @relation(fields: [producerId], references: [id])
-  producerId String
-  purchases  Purchase[]
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
-}
-
-model File {
-  id        String    @id @default(cuid())
-  beatId    String
-  beat      Beat      @relation(fields: [beatId], references: [id])
-  type      FileType
-  url       String    // S3 url
-  createdAt DateTime  @default(now())
-
-  @@unique([beatId, type]) // one file type per beat
-}
-
-model License {
-  id       String     @id @default(cuid())
-  beatId   String
-  beat     Beat       @relation(fields: [beatId], references: [id])
-  type     LicenseType
-  price    Int        // in cents
-  purchases Purchase[]
-
-  @@unique([beatId, type]) // each license type once per beat
-}
-
-model Purchase {
-  id          String         @id @default(cuid())
-  userId      String?
-  user        User?          @relation(fields: [userId], references: [id])
-  beatId      String
-  beat        Beat           @relation(fields: [beatId], references: [id])
-  licenseId   String
-  license     License        @relation(fields: [licenseId], references: [id])
-
-  amount      Int
-  currency    Currency
-  status      PurchaseStatus @default(pending)
-  provider    Provider
-  providerTxn String         @unique
-
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-}
-
-//
-// 🔹 Auth Models (Better-Auth)
-//
 model User {
   id            String     @id @default(cuid())
   name          String?
@@ -113,8 +28,6 @@ model User {
   updatedAt     DateTime   @updatedAt
   sessions      Session[]
   accounts      Account[]
-  beats         Beat[]
-  purchases     Purchase[]
 
   @@map("user")
 }
