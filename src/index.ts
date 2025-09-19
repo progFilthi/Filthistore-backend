@@ -25,8 +25,13 @@ app.get("/", (_, res) => {
   res.status(200).json({ Message: "Filthi store is running ..." });
 });
 
+//REST CRUD for kits
 import { kitRoutes } from "./routes/kits/kit.routes";
 app.use("/api/kits", kitRoutes);
+
+//S3 uploads
+import { uploadRoutes } from "./routes/kits/upload.routes";
+app.use("/api/uploads", uploadRoutes);
 
 const port = process.env.PORT || 8001;
 
