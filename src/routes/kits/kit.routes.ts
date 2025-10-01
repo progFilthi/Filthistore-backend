@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { kitControllers } from "../../controllers/kits/kit.controllers";
+import { kitControllers } from "../../controllers/kits/kit.controller";
 
 export const kitRoutes = Router();
 

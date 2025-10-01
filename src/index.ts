@@ -29,6 +29,10 @@ app.get("/", (_, res) => {
 import { kitRoutes } from "./routes/kits/kit.routes";
 app.use("/api/kits", kitRoutes);
 
+//REST CRUD for cart
+import { cartRoutes } from "./routes/cart/cart.routes";
+app.use("/api/cart/items", cartRoutes);
+
 //S3 uploads
 import { uploadRoutes } from "./routes/kits/upload.routes";
 app.use("/api/uploads", uploadRoutes);
